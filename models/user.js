@@ -25,14 +25,14 @@ const userSchema = new mongoose.Schema(
             default: 'user'
         },
         photo: {
-            type: String, // Path to the uploaded photo
+            type: String, 
             default: null
         },
         uuid: {
             type: String,
             required: true,
             unique: true,
-            default: uuidv4 // Automatically generates a UUID
+            default: uuidv4 
         }
     },
     { timestamps: true }
