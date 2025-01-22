@@ -6,6 +6,8 @@ const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
+const Image = require('./models/Photo'); // Adjust the path if necessary
+const fs = require('fs');
 
 // Models
 const User = require('./models/user');
@@ -120,7 +122,8 @@ app.post('/login', async (req, res) => {
       user: {
         username: user.username,
         email: user.email,
-        photo: user.photo
+        photo: user.photo,
+        uuid:user.uuid
       },
     });
   } catch (error) {
@@ -174,6 +177,38 @@ app.put('/upload-photo', upload.single('photo'), async (req, res) => {
   }
 });
 
+// Route to handle image upload
+app.post('/users/:uuid/images', upload.single('image'), async (req, res) => {
+  const { uuid } = req.params;
+  console.log(uuid)
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'No image uploaded' });
+  }
+
+  try {
+    const user = await User.findOne({ uuid });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Read the image file
+    const imageData = fs.readFileSync(req.file.path);
+
+    // Save the image to MongoDB
+    const image = new Image({
+      userUuid: uuid,
+      imageData,
+      contentType: req.file.mimetype,
+    });
+
+    await image.save();
+    res.status(201).json({ message: 'Image uploaded successfully', image });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
